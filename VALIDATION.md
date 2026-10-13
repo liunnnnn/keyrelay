@@ -7,6 +7,8 @@ Current local checks:
 - 12 regression checks pass: the 9 original checks and adapter IDs, default/overridden delay, CLI order, target resolution and conflicting/unknown clients.
 - All original planning fixtures are retained. The planner and US key mapping remain byte-identical to the published baseline.
 - The app builds and its input self-check passes. Both keyrelay and vmtype wrappers expose the same CLI.
+- 12 legacy generic CLI cases match baseline exit status, stdout and stderr exactly. Both wrappers also match for all six client dry-runs.
+- The native GUI shows client selection and evidence status. ESXi selection, multiline permission, disabled/enabled send controls and custom/default Tab widths were checked without typing into a target.
 - Adapter dry-runs do not send keys; remote target-side acceptance is tracked separately in docs/COMPATIBILITY.md.
 
 No new Sunlogin, ToDesk, UU or Windows App remote acceptance is claimed. No customer files or configuration are changed by local checks.
