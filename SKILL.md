@@ -1,9 +1,17 @@
 ---
 name: text-to-keyboard-input
-description: Use KeyRelay vmtype on macOS to type text as physical keystrokes into remote customer desktops, ESXi consoles or Windows App sessions where paste is unavailable. Includes Bash here-doc and tee workflows for long or non-ASCII file contents. Not for general SSH administration or building the input tool.
+description: Use macOS KeyRelay / vmtype only as a fallback when the AI's built-in keyboard tools are unavailable or cannot reliably complete the target input. If native keyboard input works, do not invoke KeyRelay; failed paste alone is not a reason to switch. Includes remote-window typing and Bash/tee file workflows. Not for general SSH administration or building the tool.
 ---
 
 # KeyRelay text-to-keyboard input
+
+## Prefer the AI's built-in keyboard tools
+
+1. Assess whether the AI's available native keyboard tools can reliably complete input in the authorized target field. If they can, use them directly; do not invoke, build, open or request permissions for KeyRelay.
+2. If capability is uncertain, verify a short harmless sample in a suitable, authorized input field and read back what it receives. Reuse existing failure evidence for the same environment rather than probing again. Do not submit long commands, business operations or file overwrites just to test capability.
+3. Use the KeyRelay workflow below only when native keyboard tools are unavailable or a concrete failure prevents reliable input, such as lost characters, incorrect key events or an unsupported required key sequence. Briefly state the reason. Resolve focus, permission and layout problems rather than treating the fallback as a way around them. Stop repeating failed sends if KeyRelay also fails.
+
+Paste failure does not imply keyboard failure. Client name, text length, multiline content and non-ASCII content do not automatically justify KeyRelay. If native tools can enter the text or a prepared encoding command, continue with native input. The tee / Base64 preparation below can be used with either input route; both require target-side verification.
 
 ## Locate the tool
 
@@ -26,7 +34,7 @@ CLI, using the verified tool path in vmtype_bin:
 
 --file reads local text; --stdin is also supported. --target BUNDLE_ID activates only the outer Mac app, not a tab, connection or input field. Verify the requested host, program and focus. A Windows App session may contain Windows software or a Linux terminal; use the actual target program's syntax.
 
-Without a final newline the final line is not submitted. --allow-enter authorizes only the line breaks present in the text; they may execute commands. CLI defaults are 5 seconds, 45 ms, 4 spaces per Tab, independent of GUI preferences. Original and expanded text are limited to 64 KB. Use an English input source and matching US layouts. Run one task at a time, keep focus, test a short harmless payload first, and read the target result before sending long content.
+Without a final newline the final line is not submitted. --allow-enter authorizes only the line breaks present in the text; they may execute commands. CLI defaults are 5 seconds and 4 spaces per Tab, independent of GUI preferences; generic uses 45 ms and remote presets use 100 ms unless --delay-ms overrides it. Original and expanded text are limited to 64 KB. Use an English input source and matching US layouts. Run one task at a time, keep focus, test a short harmless payload first, and read the target result before sending long content.
 
 ## User-controlled tee commands
 

@@ -102,6 +102,8 @@ The AI skill describes preparing commands from original UTF-8 bytes: replace con
 
 ### AI skill
 
+The AI should use its own keyboard tools first. KeyRelay is a fallback only when those tools are unavailable or have a confirmed input failure; paste failure alone is not enough. Use the current repository's Skill for the latest invocation policy; release archives contain the snapshot from that release.
+
 [SKILL.md](SKILL.md) provides the `text-to-keyboard-input` skill. Download the separate skill archive, or install from the source directory (review differences before replacing an existing skill):
 
 ```sh
@@ -277,6 +279,8 @@ EOF
 该例写入「中文测试」及末尾换行。AI Skill 包含从原始正文生成完整命令的步骤：在编码前按设置替换 Tab，保留其余字节，然后核对转换后正文的 SHA-256。工具不会解码和重写你提供的 Base64。
 
 ## AI Skill
+
+AI 优先使用自身的键盘操作能力，能可靠完成就直接输入；只有能力不可用或已确认无法完成输入时才调用 KeyRelay，不能仅因粘贴失败就调用工具。最新调用规则以当前仓库的 Skill 为准，Release 压缩包保留对应发布时的版本快照。
 
 仓库中的 [SKILL.md](SKILL.md) 为 `text-to-keyboard-input` Skill；包含 CLI、here-doc、长文本和中文文件输入流程。Skill 包与应用包分开下载。
 
