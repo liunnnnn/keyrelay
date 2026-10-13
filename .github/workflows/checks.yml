@@ -1,0 +1,18 @@
+name: Checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run regression checks
+        run: zsh test.sh
+      - name: Build app and check CLI
+        run: |
+          zsh build.sh
+          ./dist/keyrelay --list-clients
+          ./dist/keyrelay --client esxi --text 'abc ABC !@#' --dry-run
