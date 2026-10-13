@@ -1,0 +1,74 @@
+#!/bin/zsh
+set -euo pipefail
+task_dir=$(cd "$(dirname "$0")" && pwd)
+task_app="$task_dir/KeyRelay.app"
+if (( $# == 0 )); then
+  exec /usr/bin/open "$task_app"
+fi
+task_direct=0
+task_skip=0
+for task_option in "$@"; do
+  if (( task_skip )); then task_skip=0; continue; fi
+  case "$task_option" in
+    --text|--file|--mode|--target|--client|--countdown|--delay-ms|--tab-spaces) task_skip=1 ;;
+    --dry-run|--help|-h|--self-test|--list-clients) task_direct=1 ;;
+  esac
+done
+if (( task_direct )); then
+  exec "$task_app/Contents/MacOS/KeyRelay" "$@"
+fi
+# LaunchServices gives GUI and CLI the same app identity for Accessibility.
+umask 077
+task_tmp=$(mktemp -d "${TMPDIR:-/tmp}/vmtype.XXXXXXXX")
+task_child=""
+task_open=""
+task_cleanup() { rm -rf "$task_tmp"; }
+task_interrupt() {
+  if [[ -f "$task_tmp/pid" ]]; then
+    task_child=$(cat "$task_tmp/pid")
+    if [[ "$task_child" == <-> ]]; then kill -INT "$task_child" 2>/dev/null || true; fi
+  fi
+  if [[ -n "$task_open" ]]; then wait "$task_open" 2>/dev/null || true; fi
+  [[ ! -f "$task_tmp/stdout" ]] || cat "$task_tmp/stdout"
+  [[ ! -f "$task_tmp/stderr" ]] || cat "$task_tmp/stderr" >&2
+  print -u2 'Input cancelled.'
+  exit 130
+}
+trap task_cleanup EXIT
+trap task_interrupt INT TERM
+task_args=("$@")
+task_input=/dev/null
+task_target=""
+for (( task_i=1; task_i <= ${#task_args}; task_i++ )); do
+  if [[ "${task_args[task_i]}" == --stdin ]]; then
+    cat > "$task_tmp/input"
+    task_input="$task_tmp/input"
+  elif [[ "${task_args[task_i]}" == --file ]] && (( task_i < ${#task_args} )); then
+    (( task_i++ ))
+    cat "${task_args[task_i]}" > "$task_tmp/input-file-$task_i"
+    task_args[task_i]="$task_tmp/input-file-$task_i"
+  elif [[ "${task_args[task_i]}" == --target ]] && (( task_i < ${#task_args} )); then
+    task_target="${task_args[task_i+1]}"
+  fi
+done
+if [[ -n "$task_target" ]]; then /usr/bin/open -b "$task_target"; fi
+/usr/bin/open -n -W -g --stdin "$task_input" --stdout "$task_tmp/stdout" --stderr "$task_tmp/stderr" \
+  --env "VMTYPE_RESULT_FILE=$task_tmp/result" --env "VMTYPE_PID_FILE=$task_tmp/pid" \
+  "$task_app" --args "${task_args[@]}" > "$task_tmp/open-log" 2>&1 &
+task_open=$!
+wait "$task_open" || true
+# Fast CLI processes can exit before open -W registers them. Wait for their result.
+for (( task_i=0; task_i < 100; task_i++ )); do
+  [[ -f "$task_tmp/result" ]] && break
+  sleep 0.05
+done
+[[ ! -f "$task_tmp/stdout" ]] || cat "$task_tmp/stdout"
+[[ ! -f "$task_tmp/stderr" ]] || cat "$task_tmp/stderr" >&2
+if [[ -f "$task_tmp/result" ]]; then
+  task_result=$(cat "$task_tmp/result")
+  [[ "$task_result" == 0 ]] && exit 0
+  exit 1
+fi
+cat "$task_tmp/open-log" >&2
+print -u2 'No completion result was received. Check whether the application started.'
+exit 1

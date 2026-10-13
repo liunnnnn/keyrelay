@@ -1,0 +1,4 @@
+interface:
+  display_name: "KeyRelay"
+  short_description: "macOS keyboard input adapters for remote desktops and VM consoles"
+  default_prompt: "Use $text-to-keyboard-input to type the requested text or prepare Bash/tee input, then verify actual target content."
